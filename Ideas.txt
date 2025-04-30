@@ -1,0 +1,5 @@
+PCA on positions? The positions may give a hint about the roads. Getting to know where the roads are
+may help the model figure out future turns
+
+The trajectories of other vechicles may help. A vehicle may take the path that the ego vechicle will take in
+the future (PROBLEM: Non ego data can be sparse (0 fill))

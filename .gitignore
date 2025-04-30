@@ -1,0 +1,9 @@
+# Ignore Data, Intermediate Submissions, Submissions
+Data/*
+Intermediate submissions/*
+Submissions/*
+
+# Ignore pycache, original files downloaded
+**/__pycache__/
+cse-251-b-2025/
+cse-251-b-2025.zip
