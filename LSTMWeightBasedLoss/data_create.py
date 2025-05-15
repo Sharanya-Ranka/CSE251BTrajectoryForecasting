@@ -140,8 +140,6 @@ def main():
 
     # breakpoint()
 
-    os.makedirs(os.path.join(DATA_DIR, "IntermediateData", "ConstantVelocityPlusNN"))
-
     np.savez(
         os.path.join(
             DATA_DIR, "IntermediateData", "ConstantVelocityPlusNN", "train.npz"
