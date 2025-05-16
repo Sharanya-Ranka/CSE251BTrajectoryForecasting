@@ -138,11 +138,11 @@ def main():
     print(f"Shape of testX: {testX.shape}")
     print(f"Shape of testXnorm: {testXnorm.shape}")
 
-    os.makedirs(os.path.join(DATA_DIR, "IntermediateData", "LSTMWeightBasedLoss"), exist_ok=True)
+    os.makedirs(os.path.join(DATA_DIR, "IntermediateData", "ConstantVelocityPlusNN"), exist_ok=True)
 
     np.savez(
         os.path.join(
-            DATA_DIR, "IntermediateData", "LSTMWeightBasedLoss", "train.npz"
+            DATA_DIR, "IntermediateData", "ConstantVelocityPlusNN", "train.npz"
         ),
         data=train_data,
         X=trainXnorm,
@@ -151,7 +151,7 @@ def main():
 
     np.savez(
         os.path.join(
-            DATA_DIR, "IntermediateData", "LSTMWeightBasedLoss", "test.npz"
+            DATA_DIR, "IntermediateData", "ConstantVelocityPlusNN", "test.npz"
         ),
         data=test_data,
         X=testXnorm,

@@ -1,6 +1,6 @@
 import os
 
-DATA_DIR = "Data"
+DATA_DIR = "LSTMWeightBasedLoss/Data"
 INTERMEDIATE_DATA_DIR = os.path.join(DATA_DIR, "IntermediateData")
 
 DATAEXPLOREPLOTS_DIR = "DataExplorePlots"

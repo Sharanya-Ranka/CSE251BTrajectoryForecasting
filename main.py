@@ -16,7 +16,10 @@ import numpy as np
 import pandas as pd
 from LSTMWeightBasedLoss.data_create import createUnnormalizedY, createOriginalSpacePredictions
 
-# First run data creation
+# First run data creation for ConstantVelocityPlusNN
+cvnn_dc_run.main()
+
+# Then run data creation for LSTMWeightBasedLoss
 lswbdc_run.main()
 
 # Then run training
@@ -39,8 +42,8 @@ model = EgoAgentNN(config).to(config["DEVICE"])
 optimizer = torch.optim.Adam(model.parameters(), lr=config["LEARNING_RATE"])
 
 # Load data
-train_file = np.load(os.path.join("Data", "IntermediateData", "ConstantVelocityPlusNN", "train.npz"))
-test_file = np.load(os.path.join("Data", "IntermediateData", "ConstantVelocityPlusNN", "test.npz"))
+train_file = np.load(os.path.join("LSTMWeightBasedLoss", "Data", "IntermediateData", "LSTMWeightBasedLoss", "train.npz"))
+test_file = np.load(os.path.join("LSTMWeightBasedLoss", "Data", "IntermediateData", "LSTMWeightBasedLoss", "test.npz"))
 
 trainX = torch.tensor(train_file["X"], dtype=torch.float32)
 trainY = torch.tensor(train_file["Y"], dtype=torch.float32)
