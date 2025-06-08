@@ -7,3 +7,15 @@ Submissions/*
 **/__pycache__/
 cse-251-b-2025/
 cse-251-b-2025.zip
+
+# Ignore some large files
+*.html
+
+
+# Ignore models
+Models
+
+# Ignore the Code Update file (already migrated actual code)
+Code Update/
+
+kaggle.json

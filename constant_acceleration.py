@@ -5,7 +5,7 @@ from utilities import *
 
 
 train_file = np.load(os.path.join(DATA_DIR, "train.npz"))
-train_data = train_file["data"]
+train_data = train_file["data"].astype(np.float32)
 print("train_data's shape", train_data.shape)
 
 test_file = np.load(os.path.join(DATA_DIR, "test_input.npz"))
@@ -43,13 +43,15 @@ print(f"Multipliers shape {multipliers.shape}\n{multipliers[:3]}")
 for t in range(1, 61):
     pred_y[:, t] = pred_y[:, t - 1] + np.multiply(last_vel, multipliers)
     last_vel += constant_acc
+    constant_acc = constant_acc * 0.96
 
 # print(f"TrainY\n{train_y[0, :3]}")
 # print()
 # print(f"PredY\n{pred_y[0, :3]}")
 pred_y = pred_y[:, 1:] + last_pos.reshape(-1, 1, 2)
 mse = ((train_y - pred_y) ** 2).mean()
-print(f"mse={mse} ")
+breakpoint()
+# print(f"mse={mse} ")
 
 # np.savez(
 #     os.path.join(INTERMEDIATE_SUBMISSIONS_DIR, "constant_acceleration.npz"),

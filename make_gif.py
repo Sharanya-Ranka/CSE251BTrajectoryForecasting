@@ -16,6 +16,7 @@ def make_gif(data_matrix, name="example"):
         for i in range(1, data_matrix.shape[0]):
             x = data_matrix[i, frame, 0]
             y = data_matrix[i, frame, 1]
+            agent_type = data_matrix[i, frame, 5]
             if x != 0 and y != 0:
                 xs = data_matrix[i, : frame + 1, 0]  # Include current frame
                 ys = data_matrix[i, : frame + 1, 1]  # Include current frame
@@ -28,7 +29,7 @@ def make_gif(data_matrix, name="example"):
 
                 # Only plot if we have points to plot
                 if len(xs) > 0 and len(ys) > 0:
-                    color = cmap(i)
+                    color = cmap(agent_type)
                     ax.plot(xs, ys, alpha=0.9, color=color)
                     ax.scatter(x, y, s=80, color=color)
 
