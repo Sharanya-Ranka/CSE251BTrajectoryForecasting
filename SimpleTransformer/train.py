@@ -227,6 +227,7 @@ class SimpleTransformerTrainer:
         output_df = pd.DataFrame(pred_output, columns=["x", "y"])
 
         output_df.index.name = "index"
+        os.makedirs(utils.SUBMISSION_DIR, exist_ok=True)
         output_df.to_csv(
             os.path.join(utils.SUBMISSION_DIR, "simple_transformer_submission.csv")
         )

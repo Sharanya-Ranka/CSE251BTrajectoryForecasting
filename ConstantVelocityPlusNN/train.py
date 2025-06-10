@@ -12,13 +12,15 @@ import utilities as utils
 class SimpleNNTrainer:
     def __init__(self, config):
         self.config = config
+        self.best_eval_loss = float('inf')
+
 
     def performPipeline(self):
         self.setUpData()
         self.setUpModel()
         self.setUpOptimizer()
         self.train()
-        # self.predict()
+        #self.predict()
 
     def setUpData(self):
         total_indices = np.arange(self.config["NUM_SAMPLES"])
@@ -97,20 +99,69 @@ class SimpleNNTrainer:
                 origspace_score_te = self.analyze(self.test_dataloader)
                 print(f"OrigSpace score (test) {origspace_score_te}")
 
-                # if unnormalized_score < best_unnormalized_score:
-                #     best_unnormalized_score = unnormalized_score
-                #     self.predict()
+                if origspace_score_te < best_unnormalized_score:
+                    best_unnormalized_score = origspace_score_te
+                    self.predict()
 
         return training_progress
+
+    # def train(self):
+    #     training_progress = {}
+    #     best_unnormalized_score = float('inf')
+        
+    #     for epoch in range(self.config["EPOCHS"]):
+    #         train_loss = self.train_epoch()
+    #         eval_loss = self.eval_epoch()
+            
+    #         print(f"Epoch {epoch}: train_loss:{train_loss:.5f}, eval_loss:{eval_loss:.5f}")
+    #         training_progress[epoch] = {
+    #             "train_loss": train_loss,
+    #             "eval_loss": eval_loss,
+    #         }
+
+    #         # Early stopping check
+    #         if eval_loss < self.best_eval_loss:
+    #             self.best_eval_loss = eval_loss
+    #             self.patience_counter = 0
+    #             self.best_model_state = self.model.state_dict().copy()
+    #         else:
+    #             self.patience_counter += 1
+    #             if self.patience_counter >= self.config.get("PATIENCE", 10):
+    #                 print(f"Early stopping triggered after {epoch + 1} epochs")
+    #                 break
+
+    #         if self.config.get("ANALYZE"):
+    #             origspace_score_tr = self.analyze(self.train_dataloader)
+    #             print(f"OrigSpace score (train) {origspace_score_tr}")
+
+    #             origspace_score_te = self.analyze(self.test_dataloader)
+    #             print(f"OrigSpace score (test) {origspace_score_te}")
+
+    #             if origspace_score_te < best_unnormalized_score:
+    #                 best_unnormalized_score = origspace_score_te
+    #                 self.predict()
+
+    #     # Restore best model
+    #     if self.best_model_state is not None:
+    #         self.model.load_state_dict(self.best_model_state)
+
+    #     return training_progress
+    
+    def weighted_mse_loss(self, pred, target, weights):
+        diff = (pred-target) **2
+        weighted_diff = diff*weights
+        return weighted_diff.mean()
 
     def computeLoss(self, true, prediction):
         # print(
         #     f"computeLoss: prediction_shape={prediction.shape}, true_shape={true.shape}"
         # )
         # breakpoint()
-        loss = torch.mul(
-            100, torch.mean((true[:, :, :2] - prediction[:, :, :2]) ** 2)
-        )  # + torch.mul(5, torch.mean((true[:, :, 2:5] - prediction[:, :, 2:5]) ** 2))
+        # loss = torch.mul(
+        #     100, torch.mean((true[:, :, :2] - prediction[:, :, :2]) ** 2)
+        # )  # + torch.mul(5, torch.mean((true[:, :, 2:5] - prediction[:, :, 2:5]) ** 2))
+        weights = torch.tensor([2.0, 2.0, 0.75, 0.75, 1.0], device=true.device)
+        loss = self.weighted_mse_loss(prediction, true, weights)
         return loss
 
     # Training function
@@ -123,9 +174,9 @@ class SimpleNNTrainer:
         for batch, (X, y, _) in enumerate(self.train_dataloader):
             X, y = X.to(self.config["DEVICE"]), y.to(self.config["DEVICE"])
 
-            Xf = torch.flatten(X, start_dim=1)
+            #Xf = torch.flatten(X, start_dim=1)
             # Compute prediction error
-            prediction = self.model(Xf)
+            prediction = self.model(X)
 
             puf = prediction.reshape(y.shape)
             loss = self.computeLoss(y, puf)
@@ -157,9 +208,9 @@ class SimpleNNTrainer:
                 # Move data to the specified device
                 X, y = X.to(self.config["DEVICE"]), y.to(self.config["DEVICE"])
 
-                Xf = torch.flatten(X, start_dim=1)
+                #Xf = torch.flatten(X, start_dim=1)
                 # Compute prediction error
-                prediction = self.model(Xf)
+                prediction = self.model(X)
 
                 puf = prediction.reshape(y.shape)
                 loss = self.computeLoss(y, puf)
@@ -185,9 +236,9 @@ class SimpleNNTrainer:
 
             X, y = X.to(self.config["DEVICE"]), y.to(self.config["DEVICE"])
 
-            Xf = torch.flatten(X, start_dim=1)
+            #Xf = torch.flatten(X, start_dim=1)
             # Compute prediction error
-            prediction = self.model(Xf)
+            prediction = self.model(X)
 
             puf = prediction.reshape(y.shape)
 
@@ -204,32 +255,65 @@ class SimpleNNTrainer:
 
         return total_unnormalized / min(num_batches, len(dataloader))
 
+    # def predict(self):
+    #     all_predictions = []
+    #     dataloader = self.predict_dataloader
+    #     inference_steps = 60
+
+    #     self.model.eval()
+
+    #     total_unnormalized = 0
+    #     for batch, (X, y, org_indices) in enumerate(dataloader):
+
+    #         X, y = X.to(self.config["DEVICE"]), y.to(self.config["DEVICE"])
+    #         for i in range(inference_steps):
+    #             predictions = self.model(X, y)
+    #             y = torch.cat((y, predictions[:, -1:, :]), axis=1)
+
+    #         predd = y.detach().numpy()
+
+    #         pred_unnormalized = dataloader.dataset.unnormalizeData(predd, org_indices)
+    #         # print(f"Pred unnorm shape={pred_unnormalized.shape}")
+    #         # print(f"Pred={pred_unnormalized}")
+    #         # breakpoint()
+    #         all_predictions.append(pred_unnormalized)
+    #         # predictions.append(pred_unnormalized)
+
+    #     all_np_predictions = np.concatenate(all_predictions, axis=0)[:, 1:, :2]
+    #     self.convertAndSavePredictions(all_np_predictions)
     def predict(self):
         all_predictions = []
         dataloader = self.predict_dataloader
         inference_steps = 60
 
         self.model.eval()
+        with torch.no_grad():
+            for batch, (X, _, org_indices) in enumerate(dataloader):
+                X = X.to(self.config["DEVICE"])
+                #Xf = torch.flatten(X, start_dim=1)
+                
+                # Get initial prediction
+                predictions = self.model(X)
+                predictions = predictions.reshape(-1, 60, 5)
+                
+                # Convert to numpy for unnormalization
+                pred_np = predictions.cpu().numpy()
+                
+                # Unnormalize predictions
+                pred_unnormalized = dataloader.dataset.getOriginalSpacePredictions(pred_np, org_indices)
+                all_predictions.append(pred_unnormalized)
 
-        total_unnormalized = 0
-        for batch, (X, y, org_indices) in enumerate(dataloader):
-
-            X, y = X.to(self.config["DEVICE"]), y.to(self.config["DEVICE"])
-            for i in range(inference_steps):
-                predictions = self.model(X, y)
-                y = torch.cat((y, predictions[:, -1:, :]), axis=1)
-
-            predd = y.detach().numpy()
-
-            pred_unnormalized = dataloader.dataset.unnormalizeData(predd, org_indices)
-            # print(f"Pred unnorm shape={pred_unnormalized.shape}")
-            # print(f"Pred={pred_unnormalized}")
-            # breakpoint()
-            all_predictions.append(pred_unnormalized)
-            # predictions.append(pred_unnormalized)
-
-        all_np_predictions = np.concatenate(all_predictions, axis=0)[:, 1:, :2]
+        all_np_predictions = np.concatenate(all_predictions, axis=0)[:, :, :2]
         self.convertAndSavePredictions(all_np_predictions)
+
+    # def convertAndSavePredictions(self, predictions):
+    #     assert tuple(predictions.shape) == (2100, 60, 2)
+
+    #     pred_output = predictions.reshape(-1, 2)
+    #     output_df = pd.DataFrame(pred_output, columns=["x", "y"])
+    #     os.makedirs(utils.SUBMISSION_DIR, exist_ok=True)
+    #     output_df.index.name = "index"
+    #     output_df.to_csv(os.path.join(utils.SUBMISSION_DIR, "simple_nn_submission.csv"))
 
     def convertAndSavePredictions(self, predictions):
         assert tuple(predictions.shape) == (2100, 60, 2)
@@ -238,8 +322,11 @@ class SimpleNNTrainer:
         output_df = pd.DataFrame(pred_output, columns=["x", "y"])
 
         output_df.index.name = "index"
+        
+        # Create Submissions directory if it doesn't exist
+        os.makedirs(utils.SUBMISSION_DIR, exist_ok=True)
+        
         output_df.to_csv(os.path.join(utils.SUBMISSION_DIR, "simple_nn_submission.csv"))
-
 
 def main():
     config = {
@@ -247,7 +334,7 @@ def main():
         "LEARNING_RATE": 0.001,
         "EPOCHS": 100,
         "DEVICE": "cuda" if torch.cuda.is_available() else "cpu",
-        "TEST_SIZE": 0.1,
+        "TEST_SIZE": 0.2,
         "NUM_SAMPLES": 10000,
         # Transformer specific parameters
         "D_INPUT": 1 * 50 * 5,

@@ -39,3 +39,84 @@ class EgoAgentNN(nn.Module):
         out = out.view(-1, 60, 5)         # reshape to (batch_size, 60, 5)
 
         return out
+
+# import torch
+# import torch.nn as nn
+
+
+# class EgoAgentLSTM(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.input_size = 5
+#         self.hidden_size = 128
+#         self.num_layers = 2
+#         self.output_steps = 60
+#         self.output_size = 5
+
+#         self.lstm = nn.LSTM(
+#             input_size=self.input_size,
+#             hidden_size=self.hidden_size,
+#             num_layers=self.num_layers,
+#             batch_first=True,
+#             dropout=config["DROPOUT"]
+#         )
+
+#         self.final_proj = nn.Linear(self.hidden_size, 128)
+
+#     def forward(self, x):
+#         lstm_out, _ = self.lstm(x)
+#         final_hidden = lstm_out[:, -1, :]
+#         return self.final_proj(final_hidden)  # shape: (batch, 128)
+
+
+# class EgoAgentTransformer(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.input_size = 5
+#         self.d_model = config["D_MODEL"]
+#         self.nhead = config["NHEAD"]
+#         self.num_layers = config["NUM_HIDDEN_LAYERS"]
+
+#         self.input_proj = nn.Linear(self.input_size, self.d_model)
+#         encoder_layer = nn.TransformerEncoderLayer(
+#             d_model=self.d_model, nhead=self.nhead, batch_first=True
+#         )
+#         self.transformer_encoder = nn.TransformerEncoder(
+#             encoder_layer, num_layers=self.num_layers
+#         )
+
+#         self.final_proj = nn.Linear(self.d_model, 128)
+
+#     def forward(self, x):
+#         x = self.input_proj(x)
+#         enc_out = self.transformer_encoder(x)
+#         final_hidden = enc_out[:, -1, :]
+#         return self.final_proj(final_hidden)  # shape: (batch, 128)
+
+
+# class EnsembleMetaLearner(nn.Module):
+#     def __init__(self):
+#         super().__init__()
+#         self.fc = nn.Sequential(
+#             nn.Linear(128 * 2, 256),
+#             nn.ReLU(),
+#             nn.Linear(256, 60 * 5)
+#         )
+
+#     def forward(self, lstm_feat, transformer_feat):
+#         combined = torch.cat((lstm_feat, transformer_feat), dim=1)  # shape: (batch, 256)
+#         output = self.fc(combined)
+#         return output.view(-1, 60, 5)
+
+
+# class EgoAgentEnsembleModel(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.lstm_model = EgoAgentLSTM(config)
+#         self.transformer_model = EgoAgentTransformer(config)
+#         self.meta_learner = EnsembleMetaLearner()
+
+#     def forward(self, x):
+#         lstm_feat = self.lstm_model(x)  # shape: (batch, 128)
+#         transformer_feat = self.transformer_model(x)  # shape: (batch, 128)
+#         return self.meta_learner(lstm_feat, transformer_feat)  # shape: (batch, 60, 5)

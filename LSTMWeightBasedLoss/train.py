@@ -1,9 +1,11 @@
 import ConstantVelocityPlusNN.data as dataset
 from torch.utils.data import DataLoader
-import ConstantVelocityPlusNN.model as model
+#import ConstantVelocityPlusNN.model as model
+import LSTMWeightBasedLoss.model as model
 import torch
 import numpy as np
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import utilities as utils
@@ -19,8 +21,9 @@ class SimpleNNTrainer:
         self.setUpData()
         self.setUpModel()
         self.setUpOptimizer()
-        self.train()
+        training_progress = self.train()
         #self.predict()
+        return training_progress
 
     def setUpData(self):
         total_indices = np.arange(self.config["NUM_SAMPLES"])
@@ -60,7 +63,9 @@ class SimpleNNTrainer:
         )
 
     def setUpModel(self):
-        self.model = model.EgoAgentNN(self.config)
+        # self.model = model.EgoAgentNN(self.config)
+        self.model = model.EgoAgentEnsembleModel(self.config)
+
         print(self.model)
 
     def setUpOptimizer(self):
@@ -268,28 +273,24 @@ def main():
         # Analysis parameters (optional based on ANALYZE flag)
         "ANALYZE": True,
         "ANALYZE_NUM_EXAMPLES": 100,
+        "D_MODEL": 128,              # Add this
+        "NHEAD": 8,                  # Add this
+        "NUM_HIDDEN_LAYERS": 4     # Add this
     }
 
     trainer = SimpleNNTrainer(config)
-    trainer.performPipeline()
 
-    # config1 = {
-    #     "BATCH_SIZE": 32,
-    #     "LEARNING_RATE": 0.0005,
-    #     "EPOCHS": 20,
-    #     "DEVICE": "cuda" if torch.cuda.is_available() else "cpu",
-    #     "TEST_SIZE": 0.3,
-    #     "NUM_SAMPLES": 5000,
-    #     # Transformer specific parameters
-    #     "D_INPUT": 6,
-    #     "D_OUTPUT": 6,
-    #     "D_MODEL": 24,  # Example value for the model dimension
-    #     "NHEAD": 4,  # Example value for the number of attention heads
-    #     "NUM_ENCODER_LAYERS": 6,  # Example value for the number of encoder layers
-    #     "NUM_DECODER_LAYERS": 6,  # Example value for the number of decoder layers
-    #     "DIM_FEEDFORWARD": 50,  # Example value for the feedforward dimension (often 4 * D_MODEL)
-    #     "DROPOUT": 0.1,  # Example dropout rate
-    #     # Analysis parameters (optional based on ANALYZE flag)
-    #     "ANALYZE": True,
-    #     "ANALYZE_NUM_EXAMPLES": 100,
-    # }
+    training_progress = trainer.performPipeline()
+    df_progress = pd.DataFrame.from_dict(training_progress, orient="index")
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    df_progress[["train_loss", "eval_loss"]].plot()
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Training and Validation Loss over Epochs")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("loss_curve.png")  # Optional
+    plt.show()
+
